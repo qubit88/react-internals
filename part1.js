@@ -44,7 +44,7 @@ function CompositeComponent(component) {
 // creates html element
 function DomComponent({ type, props }) {
   const domElement = document.createElement(type);
-  const textNode = document.createTextNode(props.children);
+
   if (props.style) {
     //convert props' values to string to style dom element
     let value = "";
@@ -55,7 +55,10 @@ function DomComponent({ type, props }) {
     domElement.setAttribute("style", value);
   }
 
-  domElement.appendChild(textNode);
+  if (props.children) {
+    const textNode = document.createTextNode(props.children);
+    domElement.appendChild(textNode);
+  }
 
   return domElement;
 }
