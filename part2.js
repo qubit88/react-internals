@@ -18,10 +18,6 @@ React = {
           this[method] = spec[method];
         }
       }
-
-      render() {
-        return spec.render(this.props);
-      }
     };
   },
 
@@ -32,7 +28,7 @@ React = {
 
   Reconciler: {
     mount(instance, container) {
-
+      return instance.mount(container);
     }
   }
 };
@@ -41,19 +37,22 @@ React = {
 function CompositeComponent(component) {
   this.component = component;
 
-  if (typeof this.component.type !== "string") {
-    this.component = new this.component.type(this.component.props).render();
-  }
+  this._compositeMount = () => {
+    return new CompositeComponent(
+      new this.component.type(this.component.props).render()
+    );
+  };
 
-  else {
-    this.component = new this.component.type
-  }
+  this.mount = container => {
+    if (typeof this.component.type !== "string") {
+      this.component = this._compositeMount();
+    }
 
-  this.domElement = DomComponent(this.component);
+    if (typeof this.component.type === "string") {
+      this.component = new DomComponent(this.component);
+    }
 
-
-  this.mount = (container) => {
-
+    React.Reconciler.mount(this.component, container);
   };
 }
 
@@ -68,34 +67,33 @@ function DomComponent({ type, props }) {
       value += `${el[0]}:${el[1]};`;
     });
 
-    domElement.setAttribute("style", value);
+    this.domElement.setAttribute("style", value);
   }
 
   if (props.children) {
     const textNode = document.createTextNode(props.children);
-    domElement.appendChild(textNode);
+    this.domElement.appendChild(textNode);
   }
 
-  this.mount(container) {
+  this.mount = container => {
     container.appendChild(this.domElement);
-  }
-  
+  };
 }
 
 const Header = React.createClass({
-  render(props) {
-    return React.createElement("h1", props);
+  render() {
+    return React.createElement("h1", this.props);
   }
 });
 
 const boldSpan = React.createClass({
-  render(props) {
-    return React.createElement("span", props);
+  render() {
+    return React.createElement("span", this.props);
   }
 });
 
 const Footer = React.createClass({
-  render(props) {
+  render() {
     return React.createElement(
       boldSpan,
       { style: { color: "orange", "font-weight": "bold" } },
