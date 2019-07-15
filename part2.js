@@ -57,9 +57,17 @@ function CompositeComponent(component) {
 
   this.mount = container => {
     this.instance = new this.component.type(this.component.props);
+
+    if (this.instance.componentWillMount) {
+      this.instance.componentWillMount();
+    }
     this.element = this._compositeMount(this.instance);
 
     React.Reconciler.mount(this.element, container);
+
+    if (this.instance.componentDidMount) {
+      this.instance.componentDidMount();
+    }
   };
 }
 
@@ -88,6 +96,9 @@ function DomComponent({ type, props }) {
 }
 
 const Header = React.createClass({
+  componentWillMount() {
+    console.log("I will mount now");
+  },
   render() {
     return React.createElement("h1", this.props);
   }
