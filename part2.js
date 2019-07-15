@@ -22,7 +22,15 @@ React = {
   },
 
   render(element, container) {
-    let instance = new CompositeComponent(element);
+    function wrapper() {
+      this.render = () => {
+        return element;
+      };
+    }
+
+    wrappedElement = React.createElement(wrapper);
+
+    let instance = new CompositeComponent(wrappedElement);
     React.Reconciler.mount(instance, container);
   },
 
@@ -37,22 +45,21 @@ React = {
 function CompositeComponent(component) {
   this.component = component;
 
-  this._compositeMount = () => {
-    return new CompositeComponent(
-      new this.component.type(this.component.props).render()
-    );
+  this._compositeMount = instance => {
+    let el = instance.render();
+
+    if (typeof el.type === "string") {
+      return new DomComponent(el);
+    }
+
+    return new CompositeComponent(el);
   };
 
   this.mount = container => {
-    if (typeof this.component.type !== "string") {
-      this.component = this._compositeMount();
-    }
+    this.instance = new this.component.type(this.component.props);
+    this.element = this._compositeMount(this.instance);
 
-    if (typeof this.component.type === "string") {
-      this.component = new DomComponent(this.component);
-    }
-
-    React.Reconciler.mount(this.component, container);
+    React.Reconciler.mount(this.element, container);
   };
 }
 
