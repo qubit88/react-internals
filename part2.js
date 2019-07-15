@@ -26,7 +26,14 @@ React = {
   },
 
   render(element, container) {
-    new CompositeComponent(element).mount(container);
+    let instance = new CompositeComponent(element);
+    React.Reconciler.mount(instance, container);
+  },
+
+  Reconciler: {
+    mount(instance, container) {
+
+    }
   }
 };
 
@@ -34,20 +41,25 @@ React = {
 function CompositeComponent(component) {
   this.component = component;
 
-  while (typeof this.component.type !== "string") {
+  if (typeof this.component.type !== "string") {
     this.component = new this.component.type(this.component.props).render();
+  }
+
+  else {
+    this.component = new this.component.type
   }
 
   this.domElement = DomComponent(this.component);
 
-  this.mount = function(container) {
-    container.appendChild(this.domElement);
+
+  this.mount = (container) => {
+
   };
 }
 
 // creates html element
 function DomComponent({ type, props }) {
-  const domElement = document.createElement(type);
+  this.domElement = document.createElement(type);
 
   if (props.style) {
     //convert props' values to string to style dom element
@@ -64,7 +76,10 @@ function DomComponent({ type, props }) {
     domElement.appendChild(textNode);
   }
 
-  return domElement;
+  this.mount(container) {
+    container.appendChild(this.domElement);
+  }
+  
 }
 
 const Header = React.createClass({
