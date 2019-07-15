@@ -8,7 +8,7 @@ React = {
     };
   },
 
-  // creates class component; accepts object wihh render method
+  // creates class component; accepts objects methods
   createClass(spec) {
     return class ClassComponent {
       constructor(props) {
@@ -22,6 +22,7 @@ React = {
   },
 
   render(element, container) {
+    // wraps object returned by createElement in constructor function to have same signature as Class Component (call render)
     function wrapper() {
       this.render = () => {
         return element;
@@ -34,6 +35,8 @@ React = {
     React.Reconciler.mount(instance, container);
   },
 
+  // calls mount method of instances of either DomComponent or CompositeComponent
+
   Reconciler: {
     mount(instance, container) {
       return instance.mount(container);
@@ -44,6 +47,8 @@ React = {
 //accepts element object; creates class component and passes props; calls render method on class component
 function CompositeComponent(component) {
   this.component = component;
+
+  // returns instances of DomComponent or CompositeComponent
 
   this._compositeMount = instance => {
     let el = instance.render();
