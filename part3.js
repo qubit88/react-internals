@@ -31,8 +31,23 @@ React = {
 
     wrappedElement = React.createElement(wrapper);
 
-    let instance = new CompositeComponent(wrappedElement);
+    const prevRenderedComponent = container._prevRendredComponent;
+
+    if (prevRenderedComponent) {
+      React.updatePreviousComponent(prevRenderedComponent, wrappedElement);
+    } else {
+      React.renderNewComponent(wrappedElement, container);
+    }
+  },
+
+  updatePreviousComponent(prevRenderedComponent, newComponent) {
+    prevRenderedComponent.updateComponent(newComponent);
+  },
+
+  renderNewComponent(newElement, container) {
+    let instance = new CompositeComponent(newElement);
     React.Reconciler.mount(instance, container);
+    container._prevRendredComponent = instance.renderedElement;
   },
 
   // calls mount method of instances of either DomComponent or CompositeComponent
@@ -102,6 +117,18 @@ function DomComponent(element) {
     container.appendChild(this.renderedElement);
     return this.renderedElement;
   };
+
+  this.updateComponent = newElement => {
+    let {oldChildren} = this._currentElement.props;
+    let {newChildren} =  newElement.props;
+    // this.updateStyle();
+    this.updateText(oldChildren, newChildren);
+  }
+
+  this.updateText = (oldText, newText = '') => {
+    if(oldText !== newText) {
+      this.renderedElement.textNode.textValue = '';
+  }
 }
 
 const Header = React.createClass({
