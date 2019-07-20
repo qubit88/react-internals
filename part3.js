@@ -34,14 +34,14 @@ React = {
     const prevRenderedComponent = container._prevRendredComponent;
 
     if (prevRenderedComponent) {
-      React.updatePreviousComponent(prevRenderedComponent, wrappedElement);
+      React.updatePreviousComponent(prevRenderedComponent, element);
     } else {
       React.renderNewComponent(wrappedElement, container);
     }
   },
 
   updatePreviousComponent(prevRenderedComponent, newComponent) {
-    prevRenderedComponent.updateComponent(newComponent);
+    React.Reconciler.update(prevRenderedComponent, newComponent);
   },
 
   renderNewComponent(newElement, container) {
@@ -55,6 +55,9 @@ React = {
   Reconciler: {
     mount(instance, container) {
       return instance.mount(container);
+    },
+    update(prevRenderedComponent, nextElement) {
+      prevRenderedComponent.update(nextElement);
     }
   }
 };
@@ -89,6 +92,16 @@ function CompositeComponent(component) {
       this._instance.componentDidMount();
     }
   };
+
+  this.update = newElement => {
+    this._instance.props = newElement.props;
+
+    this._currentElement = newElement;
+
+    let newRendredElement = this.instance.render();
+
+    React.Reconciler.update(this.renderedElement, newRendredElement);
+  };
 }
 
 // creates html element
@@ -118,52 +131,65 @@ function DomComponent(element) {
     return this.renderedElement;
   };
 
-  this.updateComponent = newElement => {
-    let {oldChildren} = this._currentElement.props;
-    let {newChildren} =  newElement.props;
+  this.update = newElement => {
+    let oldChildren = this._currentElement.props.children;
+    let newChildren = newElement.props.children;
     // this.updateStyle();
     this.updateText(oldChildren, newChildren);
-  }
+  };
 
-  this.updateText = (oldText, newText = '') => {
-    if(oldText !== newText) {
-      this.renderedElement.textNode.textValue = '';
-  }
+  this.updateText = (oldText, newText = "") => {
+    if (oldText !== newText) {
+      let child = this.renderedElement.firstChild;
+      if (child) {
+        child.nodeValue = newText;
+      } else {
+        renderedElement.textContent = newText;
+      }
+    }
+  };
 }
 
-const Header = React.createClass({
-  componentWillMount() {
-    console.log("I will mount now");
-  },
-  render() {
-    return React.createElement("h1", this.props);
-  }
-});
+// const Header = React.createClass({
+//   componentWillMount() {
+//     console.log("I will mount now");
+//   },
+//   render() {
+//     return React.createElement("h1", this.props);
+//   }
+// });
 
-const boldSpan = React.createClass({
-  render() {
-    return React.createElement("span", this.props);
-  }
-});
+// const boldSpan = React.createClass({
+//   render() {
+//     return React.createElement("span", this.props);
+//   }
+// });
 
-const Footer = React.createClass({
-  render() {
-    return React.createElement(
-      boldSpan,
-      { style: { color: "orange", "font-weight": "bold" } },
-      "I'm span in footer"
-    );
-  }
-});
+// const Footer = React.createClass({
+//   render() {
+//     return React.createElement(
+//       boldSpan,
+//       { style: { color: "orange", "font-weight": "bold" } },
+//       "I'm span in footer"
+//     );
+//   }
+// });
 
-React.render(
-  React.createElement(Header, { style: { color: "red" } }, "I'm header"),
-  document.querySelector("#root")
-);
+// React.render(
+//   React.createElement(Header, { style: { color: "red" } }, "I'm header"),
+//   document.querySelector("#root")
+// );
 
 React.render(
   React.createElement("p", null, "I'm paragraph"),
   document.querySelector("#root")
 );
 
-React.render(React.createElement(Footer), document.querySelector("#root"));
+setTimeout(() => {
+  React.render(
+    React.createElement("p", null, "I'm paragraph changed"),
+    document.querySelector("#root")
+  );
+}, 2000);
+
+// React.render(React.createElement(Footer), document.querySelector("#root"));
