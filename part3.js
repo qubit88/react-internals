@@ -94,13 +94,27 @@ function CompositeComponent(component) {
   };
 
   this.update = newElement => {
-    this._instance.props = newElement.props;
+    const nextProps = newElement.props;
 
     this._currentElement = newElement;
 
-    let newRendredElement = this.instance.render();
+    if (this._instance.willComponentReceiveProps) {
+      this._instance.willComponentReceiveProps(nextProps);
+    }
 
-    React.Reconciler.update(this.renderedElement, newRendredElement);
+    let shouldUpdate = true;
+
+    if (this._instance.shouldComponentUpdate) {
+      shouldUpdate = this._instance.shouldComponentUpdate(nextProps);
+    }
+
+    this._instance.props = nextProps;
+
+    if (shouldUpdate) {
+      let newRendredElement = this._instance.render();
+
+      React.Reconciler.update(this.renderedElement, newRendredElement);
+    }
   };
 }
 
@@ -159,11 +173,11 @@ function DomComponent(element) {
 //   }
 // });
 
-// const boldSpan = React.createClass({
-//   render() {
-//     return React.createElement("span", this.props);
-//   }
-// });
+const boldSpan = React.createClass({
+  render() {
+    return React.createElement("span", this.props);
+  }
+});
 
 // const Footer = React.createClass({
 //   render() {
@@ -180,16 +194,33 @@ function DomComponent(element) {
 //   document.querySelector("#root")
 // );
 
+// React.render(
+//   React.createElement("p", null, "I'm paragraph"),
+//   document.querySelector("#root")
+// );
+
+// setTimeout(() => {
+//   React.render(
+//     React.createElement("p", null, "I'm paragraph changed"),
+//     document.querySelector("#root")
+//   );
+// }, 2000);
+
 React.render(
-  React.createElement("p", null, "I'm paragraph"),
+  React.createElement(
+    boldSpan,
+    { style: { color: "orange", "font-weight": "bold" } },
+    "I'm span before update"
+  ),
   document.querySelector("#root")
 );
-
 setTimeout(() => {
   React.render(
-    React.createElement("p", null, "I'm paragraph changed"),
+    React.createElement(
+      boldSpan,
+      { style: { color: "orange", "font-weight": "bold" } },
+      "I'm span after update"
+    ),
     document.querySelector("#root")
   );
 }, 2000);
-
-// React.render(React.createElement(Footer), document.querySelector("#root"));
