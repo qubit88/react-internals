@@ -207,14 +207,17 @@ function DomComponent(element) {
 
 const boldSpan = React.createClass({
   setInitialState() {
-    return { rabbit: true };
+    return { message: "Initial state" };
   },
-  setMeAtRender() {
-    this.setState({ rabbit: "nono" });
-    console.log(this.state);
+  componentWillReceiveProps(nextProps) {
+    this.setState({ message: "state from componentWillReceiveProps" });
   },
   render() {
-    return React.createElement("span", this.props);
+    return React.createElement(
+      "span",
+      this.props,
+      this.state.message + " " + this.props.newProp
+    );
   }
 });
 
@@ -246,13 +249,21 @@ const boldSpan = React.createClass({
 // }, 2000);
 
 React.render(
-  React.createElement(
-    boldSpan,
-    { style: { color: "orange", "font-weight": "bold" } },
-    "I'm span before update"
-  ),
+  React.createElement(boldSpan, {
+    style: { color: "orange", "font-weight": "bold" }
+  }),
   document.querySelector("#root")
 );
+
+setTimeout(function() {
+  React.render(
+    React.createElement(boldSpan, {
+      style: { color: "orange", "font-weight": "bold" },
+      newProp: "text from timeout"
+    }),
+    document.getElementById("root")
+  );
+}, 2000);
 // setTimeout(() => {
 //   React.render(
 //     React.createElement(
