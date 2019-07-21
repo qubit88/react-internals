@@ -24,9 +24,13 @@ React = {
       setState(stateUpdate) {
         const internalInstance = React.InstanceMap.get(this);
 
-        internalInstance._stateUpdate = stateUpdate;
+        internalInstance._stateUpdate = internalInstance._stateUpdate || [];
 
-        React.Reconciler.updateState(internalInstance);
+        internalInstance._stateUpdate.push(stateUpdate);
+
+        if (!internalInstance.rendering) {
+          React.Reconciler.updateState(internalInstance);
+        }
       }
     };
   },
@@ -122,6 +126,7 @@ function CompositeComponent(component) {
   };
 
   this.update = newElement => {
+    this.rendering = true;
     const nextProps = newElement.props;
 
     const willReceiveProps = this._currentElement !== newElement;
@@ -132,8 +137,7 @@ function CompositeComponent(component) {
 
     let shouldUpdate = true;
 
-    const nextState = { ...this._instance.state, ...this._stateUpdate };
-    this._stateUpdate = {};
+    const nextState = this._getNextState();
 
     if (this._instance.shouldComponentUpdate) {
       shouldUpdate = this._instance.shouldComponentUpdate(nextProps, nextState);
@@ -147,6 +151,20 @@ function CompositeComponent(component) {
       this._currentElement = newElement;
       React.Reconciler.update(this.renderedElement, newRendredElement);
     }
+    this.rendering = false;
+  };
+  this._getNextState = () => {
+    if (!this._stateUpdate) {
+      return this._instance.state;
+    }
+
+    let nextState = this._stateUpdate.reduce(
+      (acc, state) => ({ ...acc, ...state }),
+      this._instance.state
+    );
+
+    this._stateUpdate = null;
+    return nextState;
   };
 }
 
@@ -248,22 +266,22 @@ const boldSpan = React.createClass({
 //   );
 // }, 2000);
 
-React.render(
-  React.createElement(boldSpan, {
-    style: { color: "orange", "font-weight": "bold" }
-  }),
-  document.querySelector("#root")
-);
+// React.render(
+//   React.createElement(boldSpan, {
+//     style: { color: "orange", "font-weight": "bold" }
+//   }),
+//   document.querySelector("#root")
+// );
 
-setTimeout(function() {
-  React.render(
-    React.createElement(boldSpan, {
-      style: { color: "orange", "font-weight": "bold" },
-      newProp: "text from timeout"
-    }),
-    document.getElementById("root")
-  );
-}, 2000);
+// setTimeout(function() {
+//   React.render(
+//     React.createElement(boldSpan, {
+//       style: { color: "orange", "font-weight": "bold" },
+//       newProp: "text from timeout"
+//     }),
+//     document.getElementById("root")
+//   );
+// }, 2000);
 // setTimeout(() => {
 //   React.render(
 //     React.createElement(
@@ -274,3 +292,46 @@ setTimeout(function() {
 //     document.querySelector("#root")
 //   );
 // }, 2000);
+
+//example text code from original
+const MyComponent = React.createClass({
+  componentWillMount() {
+    this.renderCount = 0;
+  },
+
+  getInitialState() {
+    return {
+      message: "state from getInitialState"
+    };
+  },
+
+  componentWillReceiveProps(nextProps) {
+    this.setState({ message: "state from componentWillReceiveProps" });
+  },
+
+  render() {
+    this.renderCount += 1;
+    return React.createElement(
+      "h1",
+      null,
+      "this is render " +
+        this.renderCount +
+        ", with state: " +
+        this.state.message +
+        ", and this prop: " +
+        this.props.prop
+    );
+  }
+});
+
+React.render(
+  React.createElement(MyComponent, { prop: "first prop" }),
+  document.getElementById("root")
+);
+
+setTimeout(function() {
+  React.render(
+    React.createElement(MyComponent, { prop: "second prop" }),
+    document.getElementById("root")
+  );
+}, 2000);
